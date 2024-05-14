@@ -37,6 +37,30 @@ document.addEventListener("DOMContentLoaded", function () {
       // Update the root in local storage
       localStorage.setItem("root", JSON.stringify(root));
     }
+
+    // List files
+    listFiles() {
+      const root = JSON.parse(localStorage.getItem("root"));
+      let fileList = '';
+      let count = 1;
+      for (const fileName in root) {
+        const fileSize = root[fileName].size || "Unknown"; // Handle undefined file size
+        fileList += `<div>${count}. ${fileName} - ${fileSize} <button class="deleteBtn" data-file="${fileName}">Delete</button></div>`;
+        count++;
+      }
+      return fileList;
+    }
+
+    // Delete file
+    deleteFile(fileName) {
+      const root = JSON.parse(localStorage.getItem("root"));
+      if (root[fileName]) {
+        delete root[fileName];
+        localStorage.setItem("root", JSON.stringify(root));
+        return true;
+      }
+      return false;
+    }
   }
 
   // Initialize the file system
@@ -63,14 +87,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Event listener for listing files
   listFilesBtn.addEventListener("click", function () {
-    const root = JSON.parse(localStorage.getItem("root"));
-    let fileList = '';
-    let count = 1;
-    for (const fileName in root) {
-      fileList += `${count}. ${fileName} - ${root[fileName].size} bytes\n`;
-      count++;
+    const fileList = fs.listFiles();
+    outputDiv.innerHTML = fileList;
+  });
+
+  // Event delegation for delete buttons
+  outputDiv.addEventListener("click", function (e) {
+    if (e.target.classList.contains("deleteBtn")) {
+      const fileName = e.target.getAttribute("data-file");
+      const success = fs.deleteFile(fileName);
+      if (success) {
+        outputDiv.innerHTML = fs.listFiles();
+      }
     }
-    outputDiv.textContent = fileList;
   });
 
   // Event listener for deleting all files
